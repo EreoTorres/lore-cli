@@ -143,6 +143,16 @@ npx lore-cli add "Adopt PostgreSQL with pgvector for semantic search" \
 
 Generates a versioned ADR file (`ADR-003-...`), updates `.lore/decisions/`, and automatically re-indexes repository memory in under half a second.
 
+### 5. Automated Git Hook (Optional)
+
+Keep your index synchronized without thinking about it:
+
+```bash
+npx lore-cli hook
+```
+
+Installs a lightweight `.git/hooks/post-commit` (or Husky) hook that silently re-indexes repository documentation in the background after each commit.
+
 ---
 
 ## 🤖 MCP (Model Context Protocol) Integration

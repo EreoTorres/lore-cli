@@ -4,7 +4,8 @@
   "description": "The institutional memory of your codebase. Zero-config local semantic retrieval & ADR engine for engineering teams.",
   "type": "module",
   "bin": {
-    "lore": "./dist/cli/index.js"
+    "lore": "./dist/cli/index.js",
+    "lore-cli": "./dist/cli/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -16,6 +17,7 @@
   "scripts": {
     "dev": "tsx src/cli/index.ts",
     "build": "tsc",
+    "prepack": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",

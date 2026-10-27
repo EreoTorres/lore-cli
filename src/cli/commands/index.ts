@@ -21,10 +21,13 @@ export async function runIndex(options: IndexCommandOptions = {}): Promise<void>
 
   console.log(pc.bold(pc.blue('⚡ Lore: Indexing repository memory...')));
 
-  // 1. Scan files
-  const filePaths = await fg(config.include, {
+  // 1. Scan files (normalize patterns to forward slashes for cross-platform globbing)
+  const includePatterns = config.include.map(p => p.replace(/\\/g, '/'));
+  const excludePatterns = config.exclude.map(p => p.replace(/\\/g, '/'));
+
+  const filePaths = await fg(includePatterns, {
     cwd,
-    ignore: config.exclude,
+    ignore: excludePatterns,
     dot: true,
     onlyFiles: true
   });

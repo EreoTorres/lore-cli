@@ -25,8 +25,17 @@ export class LocalEmbedder implements Embedder {
         const { pipeline, env } = await import('@xenova/transformers');
         env.cacheDir = this.cacheDir;
         env.allowRemoteModels = true;
-        // Suppress onnxruntime warnings in cli
-        return await pipeline('feature-extraction', this.name);
+
+        return await pipeline('feature-extraction', this.name, {
+          progress_callback: (info: any) => {
+            if (info && info.status === 'progress' && info.file) {
+              const pct = Math.round(info.progress || 0);
+              process.stderr.write(`\r[Lore] Downloading ${info.file} (${pct}%)...`);
+            } else if (info && info.status === 'done') {
+              process.stderr.write('\r\x1b[K'); // Clear line in terminal
+            }
+          }
+        });
       })();
     }
     return this.extractorPromise;

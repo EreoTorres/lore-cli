@@ -7,6 +7,7 @@ import { runIndex } from './commands/index.js';
 import { runQuery } from './commands/query.js';
 import { runAdd } from './commands/add.js';
 import { runStatus } from './commands/status.js';
+import { runHookInstall } from './commands/hook.js';
 import { startMcpServer } from '../mcp/server.js';
 
 const program = new Command();
@@ -88,6 +89,19 @@ program
       await runStatus();
     } catch (err) {
       console.error(pc.red('Status check failed:'), (err as Error).message);
+      process.exit(1);
+    }
+  });
+
+// hook
+program
+  .command('hook')
+  .description('Install Git post-commit hook for automated background indexing')
+  .action(async () => {
+    try {
+      await runHookInstall();
+    } catch (err) {
+      console.error(pc.red('Failed to install Git hook:'), (err as Error).message);
       process.exit(1);
     }
   });
