@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.lore/
+*.log
+.env
+.DS_Store
+coverage/
+.models/
+
+# Lore vector index cache
+.lore/index.json
