@@ -6,6 +6,8 @@ dist/
 .DS_Store
 coverage/
 .models/
+CLAUDE.md
+.claude/
 
 # Lore vector index cache
 .lore/index.json
