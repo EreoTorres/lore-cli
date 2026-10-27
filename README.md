@@ -5,7 +5,7 @@
 **The institutional memory of your codebase.**  
 *Zero-config local semantic retrieval & Architecture Decision Record (ADR) engine for engineering teams and AI coding agents.*
 
-[![CI](https://github.com/jose-ernesto-torres/lore-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/jose-ernesto-torres/lore-cli/actions)
+[![CI](https://github.com/EreoTorres/lore-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/EreoTorres/lore-cli/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node: >=18](https://img.shields.io/badge/Node->=18.0.0-green.svg)](https://nodejs.org/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Enabled-purple.svg)](https://modelcontextprotocol.io/)
@@ -217,7 +217,7 @@ Includes unit tests for heading hierarchy extraction, line range fidelity, token
 
 **Jose Ernesto Torres Zamora**  
 *Cloud Solutions Architect & Tech Lead*  
-- [GitHub](https://github.com/jose-ernesto-torres)
+- [GitHub](https://github.com/EreoTorres)
 - [LinkedIn](https://linkedin.com/in/jose-ernesto-torres-zamora)
 
 ---
