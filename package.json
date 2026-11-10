@@ -1,7 +1,7 @@
 {
-  "name": "lore-cli",
-  "version": "0.1.0",
-  "description": "The institutional memory of your codebase. Zero-config local semantic retrieval & ADR engine for engineering teams.",
+  "name": "@ereotorres/lore-cli",
+  "version": "0.2.0",
+  "description": "ADRs you can ask questions to. Zero-config local hybrid search (BM25 + ONNX embeddings) and full lifecycle for Architecture Decision Records, with a built-in MCP server.",
   "type": "module",
   "bin": {
     "lore": "./dist/cli/index.js",
@@ -23,16 +23,30 @@
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EreoTorres/lore-cli.git"
+  },
+  "homepage": "https://github.com/EreoTorres/lore-cli#readme",
+  "bugs": {
+    "url": "https://github.com/EreoTorres/lore-cli/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "cli",
     "developer-tools",
+    "adr",
+    "architecture-decision-records",
+    "adr-tools",
     "rag",
     "semantic-search",
     "vector-search",
-    "adr",
     "mcp",
     "model-context-protocol",
     "knowledge-base",
+    "documentation",
     "git"
   ],
   "author": "Jose Ernesto Torres Zamora",
