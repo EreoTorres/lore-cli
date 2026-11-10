@@ -61,9 +61,7 @@ export async function runIndex(options: IndexCommandOptions = {}): Promise<void>
       });
       allChunks.push(...chunks);
     } catch (err) {
-      if (options.verbose) {
-        console.warn(pc.yellow(`Warning: Could not read ${relPath}: ${(err as Error).message}`));
-      }
+      console.warn(pc.yellow(`⚠ Skipped ${relPath}: ${(err as Error).message}`));
     }
   }
 

@@ -28,7 +28,15 @@ export async function runQuery(queryText: string, options: QueryCommandOptions =
     return;
   }
 
-  const topK = options.topK ? Number(options.topK) : 5;
+  if (manifest.model !== config.model) {
+    console.error(pc.red('Error:') + ` Index was built with model "${manifest.model}" but the config now uses "${config.model}".`);
+    console.error(`Run ${pc.cyan('lore index --force')} to rebuild the index.`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const parsedTopK = Number(options.topK);
+  const topK = Number.isFinite(parsedTopK) && parsedTopK > 0 ? Math.floor(parsedTopK) : 5;
   const embedder = getEmbedder(config);
 
   const results = await hybridSearch(queryText, manifest.chunks, embedder, { topK });

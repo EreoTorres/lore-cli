@@ -12,15 +12,17 @@ export async function runHookInstall(): Promise<void> {
     return;
   }
 
+  // Only run if the lore binary is installed; "npx lore-cli" could resolve to a different package
+  const hookCmd = 'command -v lore >/dev/null 2>&1 && lore index >/dev/null 2>&1\n';
+
   const huskyDir = path.join(cwd, '.husky');
   if (fs.existsSync(huskyDir)) {
     const postCommitPath = path.join(huskyDir, 'post-commit');
-    const hookCmd = 'npx lore-cli index\n';
     if (!fs.existsSync(postCommitPath)) {
       fs.writeFileSync(postCommitPath, `#!/bin/sh\n${hookCmd}`, { mode: 0o755 });
     } else {
       const content = fs.readFileSync(postCommitPath, 'utf8');
-      if (!content.includes('lore')) {
+      if (!content.includes('lore index')) {
         fs.appendFileSync(postCommitPath, `\n# Auto-index lore memory\n${hookCmd}`);
       }
     }
@@ -35,7 +37,7 @@ export async function runHookInstall(): Promise<void> {
   }
 
   const hookFile = path.join(hooksDir, 'post-commit');
-  const scriptContent = `#!/bin/sh\n# Lore automatic memory indexing\nnpx lore-cli index > /dev/null 2>&1 &\n`;
+  const scriptContent = `#!/bin/sh\n# Lore automatic memory indexing (runs in background, only if lore is installed)\n${hookCmd.trim()} &\n`;
 
   fs.writeFileSync(hookFile, scriptContent, { mode: 0o755 });
   console.log(pc.green('✔') + ' ' + pc.bold('Installed Git hook:') + ` ${pc.cyan('.git/hooks/post-commit')}`);

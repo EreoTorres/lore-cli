@@ -57,6 +57,18 @@ describe('Search & Ranking Engine', () => {
       expect(tokens).toContain('postgresql');
     });
 
+    it('should expand camelCase and snake_case into parts keeping the compound token', () => {
+      const tokens = tokenize('getUserData jwt_access_key');
+      expect(tokens).toContain('getuserdata');
+      expect(tokens).toContain('get');
+      expect(tokens).toContain('user');
+      expect(tokens).toContain('data');
+      expect(tokens).toContain('jwt_access_key');
+      expect(tokens).toContain('jwt');
+      expect(tokens).toContain('access');
+      expect(tokens).toContain('key');
+    });
+
     it('should rank exact keyword matches at the top', () => {
       const bm25 = new BM25Index(sampleChunks);
       const results = bm25.score('pgvector database');

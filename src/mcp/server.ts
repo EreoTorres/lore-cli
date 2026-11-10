@@ -2,19 +2,25 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { loadConfig } from '../core/config.js';
+import { getPackageVersion } from '../core/version.js';
 import { VectorStorage } from '../storage/index.js';
 import { getEmbedder } from '../embedder/index.js';
 import { hybridSearch } from '../search/hybrid.js';
 import { runAdd } from '../cli/commands/add.js';
 
 export async function startMcpServer(cwd: string = process.cwd()): Promise<void> {
+  // stdout carries the JSON-RPC stream; any log there corrupts the protocol
+  console.log = console.error.bind(console);
+  console.info = console.error.bind(console);
+  console.warn = console.error.bind(console);
+
   const config = loadConfig(cwd);
   const storage = new VectorStorage(config, cwd);
 
   const server = new Server(
     {
       name: 'lore-mcp-server',
-      version: '0.1.0'
+      version: getPackageVersion()
     },
     {
       capabilities: {
@@ -112,6 +118,17 @@ export async function startMcpServer(cwd: string = process.cwd()): Promise<void>
             {
               type: 'text',
               text: 'Repository index is empty or does not exist. Run "lore index" first.'
+            }
+          ]
+        };
+      }
+
+      if (manifest.model !== config.model) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Index was built with model "${manifest.model}" but the current config uses "${config.model}". Run "lore index --force" to rebuild the index.`
             }
           ]
         };

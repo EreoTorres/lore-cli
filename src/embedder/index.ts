@@ -10,6 +10,9 @@ export * from './providers.js';
 export function getEmbedder(config: LoreConfig): Embedder {
   switch (config.provider) {
     case 'openai': {
+      if (config.openaiApiKey) {
+        console.warn('[lore] Warning: "openaiApiKey" found in config file. Prefer the OPENAI_API_KEY environment variable; config files are often committed to git.');
+      }
       const apiKey = config.openaiApiKey || process.env.OPENAI_API_KEY;
       if (!apiKey) {
         throw new Error('OpenAI provider selected but OPENAI_API_KEY is not set.');

@@ -73,8 +73,10 @@ export async function hybridSearch(
   const bm25 = new BM25Index(chunks);
   const bm25Results = bm25.score(query, chunks.length);
   const bm25Map = new Map<number, number>();
+  const bm25ScoreMap = new Map<number, number>();
   for (let rank = 0; rank < bm25Results.length; rank++) {
     bm25Map.set(bm25Results[rank].chunkIndex, rank + 1);
+    bm25ScoreMap.set(bm25Results[rank].chunkIndex, bm25Results[rank].score);
   }
 
   // 3. Reciprocal Rank Fusion (RRF)
@@ -104,7 +106,7 @@ export async function hybridSearch(
         index: i,
         rrf,
         vectorSim: vectorSimMap.get(i) || 0,
-        bm25Score: lRank !== undefined ? 1 / lRank : 0
+        bm25Score: bm25ScoreMap.get(i) || 0
       });
     }
   }

@@ -9,13 +9,14 @@ import { runAdd } from './commands/add.js';
 import { runStatus } from './commands/status.js';
 import { runHookInstall } from './commands/hook.js';
 import { startMcpServer } from '../mcp/server.js';
+import { getPackageVersion } from '../core/version.js';
 
 const program = new Command();
 
 program
   .name('lore')
   .description('The institutional memory of your codebase. Zero-config local semantic retrieval & ADR engine.')
-  .version('0.1.0');
+  .version(getPackageVersion());
 
 // init
 program

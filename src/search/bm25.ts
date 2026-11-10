@@ -1,12 +1,26 @@
 import type { DocChunk } from '../core/types.js';
 
 export function tokenize(text: string): string[] {
-  // Tokenize words, symbols, and camelCase / snake_case
-  return text
-    .toLowerCase()
+  const rawTokens = text
     .replace(/[^\w\s-]/g, ' ')
     .split(/[\s-]+/)
     .filter(token => token.length > 1);
+
+  // Keep the compound token and also expand camelCase / snake_case into parts for better recall
+  const tokens: string[] = [];
+  for (const raw of rawTokens) {
+    tokens.push(raw.toLowerCase());
+    const parts = raw
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .split(/[\s_]+/)
+      .filter(part => part.length > 1);
+    if (parts.length > 1) {
+      for (const part of parts) {
+        tokens.push(part.toLowerCase());
+      }
+    }
+  }
+  return tokens;
 }
 
 export class BM25Index {

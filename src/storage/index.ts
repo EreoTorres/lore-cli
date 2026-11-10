@@ -5,6 +5,7 @@ import type { DocChunk, IndexManifest, LoreConfig } from '../core/types.js';
 export class VectorStorage {
   private indexPath: string;
   private storageDir: string;
+  private cache: { mtimeMs: number; manifest: IndexManifest } | null = null;
 
   constructor(config: LoreConfig, cwd: string = process.cwd()) {
     this.storageDir = path.resolve(cwd, config.storageDir);
@@ -18,8 +19,14 @@ export class VectorStorage {
   load(): IndexManifest | null {
     if (!this.exists()) return null;
     try {
+      const stat = fs.statSync(this.indexPath);
+      if (this.cache && this.cache.mtimeMs === stat.mtimeMs) {
+        return this.cache.manifest;
+      }
       const data = fs.readFileSync(this.indexPath, 'utf8');
-      return JSON.parse(data) as IndexManifest;
+      const manifest = JSON.parse(data) as IndexManifest;
+      this.cache = { mtimeMs: stat.mtimeMs, manifest };
+      return manifest;
     } catch (err) {
       console.error(`Error loading vector index from ${this.indexPath}:`, err);
       return null;
@@ -43,8 +50,15 @@ export class VectorStorage {
     };
 
     const tmpPath = `${this.indexPath}.tmp`;
-    fs.writeFileSync(tmpPath, JSON.stringify(manifest, null, 2), 'utf8');
+    // Compact JSON: pretty-printing puts every embedding float on its own line (~15x file size)
+    fs.writeFileSync(tmpPath, JSON.stringify(manifest), 'utf8');
     fs.renameSync(tmpPath, this.indexPath);
+
+    try {
+      this.cache = { mtimeMs: fs.statSync(this.indexPath).mtimeMs, manifest };
+    } catch {
+      this.cache = null;
+    }
 
     return manifest;
   }
@@ -68,6 +82,7 @@ export class VectorStorage {
   }
 
   clear(): void {
+    this.cache = null;
     if (this.exists()) {
       fs.unlinkSync(this.indexPath);
     }

@@ -41,6 +41,42 @@ function getNextAdrNumber(decisionsDir: string): string {
   return next.toString().padStart(3, '0');
 }
 
+export interface AdrContentParams {
+  adrNumber: string;
+  title: string;
+  status: string;
+  tags: string[];
+  author: string;
+  date: string;
+  context: string;
+}
+
+export function buildAdrContent(params: AdrContentParams): string {
+  const { adrNumber, title, status, tags, author, date, context } = params;
+  // JSON-escaped strings are valid YAML scalars; prevents broken frontmatter on quotes/colons
+  return `---
+title: ${JSON.stringify(`ADR-${adrNumber}: ${title}`)}
+date: ${JSON.stringify(date)}
+status: ${JSON.stringify(status)}
+tags: ${JSON.stringify(tags)}
+author: ${JSON.stringify(author)}
+---
+
+# ADR-${adrNumber}: ${title}
+
+## Context & Problem Statement
+${context}
+
+## Decision
+We decided to:
+- Document the chosen approach and why alternatives were discarded.
+
+## Consequences & Trade-offs
+- **Positive:** Benefits gained from this decision.
+- **Negative / Neutral:** Technical trade-offs, added complexity, or operational requirements.
+`;
+}
+
 export async function runAdd(title: string, options: AddCommandOptions = {}): Promise<void> {
   const cwd = process.cwd();
   const config = loadConfig(cwd);
@@ -62,27 +98,15 @@ export async function runAdd(title: string, options: AddCommandOptions = {}): Pr
 
   const contextText = options.context || 'Describe the context, problem statement, and forces that motivated this architectural decision.';
 
-  const content = `---
-title: "ADR-${adrNumber}: ${title}"
-date: "${today}"
-status: "${status}"
-tags: ${JSON.stringify(tags)}
-author: "${author}"
----
-
-# ADR-${adrNumber}: ${title}
-
-## Context & Problem Statement
-${contextText}
-
-## Decision
-We decided to:
-- Document the chosen approach and why alternatives were discarded.
-
-## Consequences & Trade-offs
-- **Positive:** Benefits gained from this decision.
-- **Negative / Neutral:** Technical trade-offs, added complexity, or operational requirements.
-`;
+  const content = buildAdrContent({
+    adrNumber,
+    title,
+    status,
+    tags,
+    author,
+    date: today,
+    context: contextText
+  });
 
   fs.writeFileSync(filePath, content, 'utf8');
 
