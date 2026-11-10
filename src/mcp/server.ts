@@ -1,12 +1,15 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import path from 'node:path';
 import { loadConfig } from '../core/config.js';
 import { getPackageVersion } from '../core/version.js';
+import { listAdrs } from '../core/adr.js';
 import { VectorStorage } from '../storage/index.js';
 import { getEmbedder } from '../embedder/index.js';
 import { hybridSearch } from '../search/hybrid.js';
 import { runAdd } from '../cli/commands/add.js';
+import { runSupersede } from '../cli/commands/supersede.js';
 
 export async function startMcpServer(cwd: string = process.cwd()): Promise<void> {
   // stdout carries the JSON-RPC stream; any log there corrupts the protocol
@@ -87,6 +90,49 @@ export async function startMcpServer(cwd: string = process.cwd()): Promise<void>
             },
             required: ['title']
           }
+        },
+        {
+          name: 'lore_list_decisions',
+          description:
+            'List all Architecture Decision Records (ADRs) with their status, tags, dates and supersede relations.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              status: {
+                type: 'string',
+                enum: ['accepted', 'proposed', 'deprecated', 'superseded'],
+                description: 'Optional filter by decision status'
+              }
+            }
+          }
+        },
+        {
+          name: 'lore_supersede_decision',
+          description:
+            'Create a new ADR that supersedes an existing one. The old ADR is marked as superseded and both records are linked.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              ref: {
+                type: 'string',
+                description: 'The ADR to supersede, by number or id (e.g. "3", "003", "ADR-003")'
+              },
+              title: {
+                type: 'string',
+                description: 'Title of the new architecture decision'
+              },
+              context: {
+                type: 'string',
+                description: 'Problem statement, context, and motivations'
+              },
+              tags: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Optional tags for classification'
+              }
+            },
+            required: ['ref', 'title']
+          }
         }
       ]
     };
@@ -161,18 +207,83 @@ export async function startMcpServer(cwd: string = process.cwd()): Promise<void>
       const tags = args?.tags as string[] | undefined;
       const status = args?.status as string | undefined;
 
-      await runAdd(title, {
+      const created = await runAdd(title, {
         context,
         tag: tags,
         status,
         index: true
-      });
+      }, cwd);
 
       return {
         content: [
           {
             type: 'text',
-            text: `Successfully added and indexed ADR: "${title}"`
+            text: `Successfully added and indexed ADR-${created.adrNumber}: "${title}"`
+          }
+        ]
+      };
+    }
+
+    if (name === 'lore_list_decisions') {
+      const decisionsDir = path.resolve(cwd, config.decisionsDir);
+      let adrs = listAdrs(decisionsDir);
+
+      const statusFilter = args?.status as string | undefined;
+      if (statusFilter) {
+        adrs = adrs.filter(a => a.status === statusFilter);
+      }
+
+      if (adrs.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: statusFilter
+                ? `No ADRs found with status "${statusFilter}".`
+                : 'No Architecture Decision Records recorded yet. Use lore_add_decision to create the first one.'
+            }
+          ]
+        };
+      }
+
+      const listing = adrs.map(a => ({
+        id: `ADR-${a.number}`,
+        title: a.title,
+        status: a.status,
+        date: a.date,
+        tags: a.tags,
+        file: path.relative(cwd, a.filePath),
+        supersedes: a.supersedes,
+        supersededBy: a.supersededBy
+      }));
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(listing, null, 2)
+          }
+        ]
+      };
+    }
+
+    if (name === 'lore_supersede_decision') {
+      const ref = args?.ref as string;
+      const title = args?.title as string;
+      const context = args?.context as string | undefined;
+      const tags = args?.tags as string[] | undefined;
+
+      const created = await runSupersede(ref, title, {
+        context,
+        tag: tags,
+        index: true
+      }, cwd);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Created ADR-${created.adrNumber}: "${title}" superseding ${ref}. The old record was marked as superseded and both are linked.`
           }
         ]
       };

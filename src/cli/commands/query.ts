@@ -78,6 +78,12 @@ export async function runQuery(queryText: string, options: QueryCommandOptions =
     console.log(`   ${pc.dim('File:')}    ${pc.underline(pc.cyan(chunk.filePath))}${pc.dim(` (lines ${chunk.startLine}-${chunk.endLine})`)}`);
     console.log(`   ${pc.dim('Link:')}    ${pc.dim(link)}`);
 
+    if (typeof chunk.metadata.status === 'string') {
+      const s = chunk.metadata.status;
+      const statusCol = s === 'accepted' ? pc.green : s === 'proposed' ? pc.yellow : pc.red;
+      console.log(`   ${pc.dim('Status:')}  ${statusCol(s)}${s === 'superseded' && typeof chunk.metadata.superseded_by === 'string' ? pc.dim(` (by ${chunk.metadata.superseded_by})`) : ''}`);
+    }
+
     if (chunk.metadata.tags && Array.isArray(chunk.metadata.tags) && chunk.metadata.tags.length > 0) {
       console.log(`   ${pc.dim('Tags:')}    ${chunk.metadata.tags.map(t => pc.bgBlue(pc.black(` ${t} `))).join(' ')}`);
     }

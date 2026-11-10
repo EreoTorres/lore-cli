@@ -6,6 +6,9 @@ import { runInit } from './commands/init.js';
 import { runIndex } from './commands/index.js';
 import { runQuery } from './commands/query.js';
 import { runAdd } from './commands/add.js';
+import { runList } from './commands/list.js';
+import { runSupersede } from './commands/supersede.js';
+import { runMark } from './commands/mark.js';
 import { runStatus } from './commands/status.js';
 import { runHookInstall } from './commands/hook.js';
 import { startMcpServer } from '../mcp/server.js';
@@ -77,6 +80,53 @@ program
       await runAdd(title, options);
     } catch (err) {
       console.error(pc.red('Failed to add ADR:'), (err as Error).message);
+      process.exit(1);
+    }
+  });
+
+// list
+program
+  .command('list')
+  .alias('ls')
+  .description('List all Architecture Decision Records with status and relations')
+  .option('-s, --status <status>', 'Filter by status: accepted | proposed | deprecated | superseded')
+  .option('--json', 'Output as JSON')
+  .action(async (options) => {
+    try {
+      await runList(options);
+    } catch (err) {
+      console.error(pc.red('Failed to list ADRs:'), (err as Error).message);
+      process.exit(1);
+    }
+  });
+
+// supersede
+program
+  .command('supersede <ref> <title>')
+  .description('Create a new ADR that supersedes an existing one (e.g. lore supersede 3 "New approach")')
+  .option('-t, --tag <tags...>', 'Tags for classification')
+  .option('-a, --author <author>', 'Author or team name')
+  .option('-c, --context <context>', 'Context or problem description')
+  .option('--no-index', 'Skip automatic index rebuild')
+  .action(async (ref, title, options) => {
+    try {
+      await runSupersede(ref, title, options);
+    } catch (err) {
+      console.error(pc.red('Failed to supersede ADR:'), (err as Error).message);
+      process.exit(1);
+    }
+  });
+
+// mark
+program
+  .command('mark <ref> <status>')
+  .description('Change the status of an ADR: accepted | proposed | deprecated | superseded')
+  .option('--no-index', 'Skip automatic index rebuild')
+  .action(async (ref, status, options) => {
+    try {
+      await runMark(ref, status, options);
+    } catch (err) {
+      console.error(pc.red('Failed to change ADR status:'), (err as Error).message);
       process.exit(1);
     }
   });

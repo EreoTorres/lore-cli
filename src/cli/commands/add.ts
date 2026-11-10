@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import pc from 'picocolors';
 import { loadConfig } from '../../core/config.js';
+import { getNextAdrNumber } from '../../core/adr.js';
 import { runIndex } from './index.js';
 
 export interface AddCommandOptions {
@@ -10,6 +11,15 @@ export interface AddCommandOptions {
   author?: string;
   context?: string;
   index?: boolean;
+  supersedes?: string[];
+  /** Internal: callers that index right after (e.g. supersede) suppress the reminder */
+  suppressIndexHint?: boolean;
+}
+
+export interface CreatedAdr {
+  adrNumber: string;
+  fileName: string;
+  filePath: string;
 }
 
 function slugify(text: string): string {
@@ -21,26 +31,6 @@ function slugify(text: string): string {
     .replace(/(^-|-$)+/g, '');
 }
 
-function getNextAdrNumber(decisionsDir: string): string {
-  if (!fs.existsSync(decisionsDir)) {
-    return '001';
-  }
-
-  const files = fs.readdirSync(decisionsDir);
-  let highest = 0;
-
-  for (const file of files) {
-    const match = file.match(/adr-(\d+)/i);
-    if (match) {
-      const num = parseInt(match[1], 10);
-      if (num > highest) highest = num;
-    }
-  }
-
-  const next = highest + 1;
-  return next.toString().padStart(3, '0');
-}
-
 export interface AdrContentParams {
   adrNumber: string;
   title: string;
@@ -49,17 +39,21 @@ export interface AdrContentParams {
   author: string;
   date: string;
   context: string;
+  supersedes?: string[];
 }
 
 export function buildAdrContent(params: AdrContentParams): string {
-  const { adrNumber, title, status, tags, author, date, context } = params;
+  const { adrNumber, title, status, tags, author, date, context, supersedes } = params;
+  const supersedesLine = supersedes && supersedes.length > 0
+    ? `\nsupersedes: ${JSON.stringify(supersedes)}`
+    : '';
   // JSON-escaped strings are valid YAML scalars; prevents broken frontmatter on quotes/colons
   return `---
 title: ${JSON.stringify(`ADR-${adrNumber}: ${title}`)}
 date: ${JSON.stringify(date)}
 status: ${JSON.stringify(status)}
 tags: ${JSON.stringify(tags)}
-author: ${JSON.stringify(author)}
+author: ${JSON.stringify(author)}${supersedesLine}
 ---
 
 # ADR-${adrNumber}: ${title}
@@ -77,8 +71,11 @@ We decided to:
 `;
 }
 
-export async function runAdd(title: string, options: AddCommandOptions = {}): Promise<void> {
-  const cwd = process.cwd();
+export async function runAdd(
+  title: string,
+  options: AddCommandOptions = {},
+  cwd: string = process.cwd()
+): Promise<CreatedAdr> {
   const config = loadConfig(cwd);
   const decisionsDir = path.resolve(cwd, config.decisionsDir);
 
@@ -105,7 +102,8 @@ export async function runAdd(title: string, options: AddCommandOptions = {}): Pr
     tags,
     author,
     date: today,
-    context: contextText
+    context: contextText,
+    supersedes: options.supersedes
   });
 
   fs.writeFileSync(filePath, content, 'utf8');
@@ -119,8 +117,10 @@ export async function runAdd(title: string, options: AddCommandOptions = {}): Pr
   if (options.index !== false) {
     console.log('');
     await runIndex();
-  } else {
+  } else if (!options.suppressIndexHint) {
     console.log('');
     console.log(pc.dim(`Remember to run ${pc.cyan('lore index')} to update semantic memory.`));
   }
+
+  return { adrNumber, fileName, filePath };
 }
