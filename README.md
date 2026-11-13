@@ -25,7 +25,7 @@ Writing Architecture Decision Records is a solved problem: tools like `adr-tools
 
 Grep only works if you remember the exact words. Static ADR sites only work if you remember the decision exists. And your AI coding assistant (Cursor, Claude, Copilot) can't respect decisions it can't find, so it hallucinates patterns that violate team consensus.
 
-**`lore` closes the loop.** It manages the full ADR lifecycle (create, list, supersede, deprecate) and turns your decisions, RFCs, and markdown docs into a local, queryable semantic memory that both humans and AI agents can ask questions to.
+**`lore` closes the loop.** It manages the full ADR lifecycle (create, list, supersede, deprecate) and turns your decisions, RFCs, and markdown docs into a local, queryable memory. To be precise, `lore` does retrieval, not generation: you search in plain language (hybrid BM25 + embeddings, no need to recall the exact words) and get back the relevant decisions ranked by relevance, with superseded ones flagged. The "ask questions" part happens when your AI assistant reads those results through the MCP server to answer and to respect decisions it would otherwise never find.
 
 ---
 
